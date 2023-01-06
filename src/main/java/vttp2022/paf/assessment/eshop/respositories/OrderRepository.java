@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vttp2022.paf.assessment.eshop.models.Customer;
 import vttp2022.paf.assessment.eshop.models.Order;
 import vttp2022.paf.assessment.eshop.models.OrderStatus;
+import vttp2022.paf.assessment.eshop.services.SaveOrderException;
 
 import static vttp2022.paf.assessment.eshop.respositories.Queries.*;
 
@@ -25,8 +26,8 @@ public class OrderRepository {
 	@Autowired
 	CustomerRepository customerRepo;
 
-	@Transactional
-	public int saveOrder(Order order){
+	@Transactional (rollbackFor = SaveOrderException.class)
+	public int saveOrder(Order order) throws SaveOrderException {
 
 		Customer customer = customerRepo.findCustomerByName(order.getName()).get();
 		int result = jdbcTemplate.update(SQL_INSERT_ORDER, order.getOrderId(), order.getName(), 
@@ -42,7 +43,9 @@ public class OrderRepository {
 		for(int i:result2){	sum+= i;}
 
 		// if not all updated
-		if(result != 1 || sum != order.getLineItems().size()){	return 0;	}
+		if(result != 1 || sum != order.getLineItems().size()){	
+			throw new SaveOrderException();
+		}
 		
 
 		return 1;

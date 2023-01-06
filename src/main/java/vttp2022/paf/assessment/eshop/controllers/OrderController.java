@@ -28,6 +28,7 @@ import vttp2022.paf.assessment.eshop.models.Order;
 import vttp2022.paf.assessment.eshop.models.OrderStatus;
 import vttp2022.paf.assessment.eshop.respositories.CustomerRepository;
 import vttp2022.paf.assessment.eshop.respositories.OrderRepository;
+import vttp2022.paf.assessment.eshop.services.SaveOrderException;
 import vttp2022.paf.assessment.eshop.services.WarehouseService;
 
 
@@ -76,12 +77,17 @@ public class OrderController {
 		order.setLineItems(items);
 
 		// save the order to database
-		int saveResult = orderRepo.saveOrder(order);
-
-		if(saveResult != 1)
+		try
+		{	int saveResult = orderRepo.saveOrder(order);	}
+		catch(SaveOrderException e)
 		{	JsonObject errorBody = Json.createObjectBuilder().add("Error", "Order not saved").build();	
 			return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(errorBody.toString());
 		}
+
+		// if(saveResult != 1)
+		// {	JsonObject errorBody = Json.createObjectBuilder().add("Error", "Order not saved").build();	
+		// 	return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(errorBody.toString());
+		// }
 
 		// call dispatch() and send the response
 		OrderStatus status = warehseSvc.dispatch(order);
